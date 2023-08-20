@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Snake Game</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+      }
+
+      #game-board {
+        display: grid;
+        grid-template-columns: repeat(20, 20px);
+        grid-template-rows: repeat(20, 20px);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game-board"></div>
+
+    <script>
+      const boardSize = 20
+      const squareSize = 20
+      const snakeSpeed = 100 // in milliseconds
+
+      let snake = [{ x: 10, y: 10 }]
+      let direction = 'right'
+      let food = generateFood()
+      let gameLoop
+
+      function generateFood() {
+        return {
+          x: Math.floor(Math.random() * boardSize),
+          y: Math.floor(Math.random() * boardSize),
+        }
+      }
+
+      function drawBoard() {
+        const gameBoard = document.getElementById('game-board')
+        gameBoard.innerHTML = ''
+
+        for (let y = 0; y < boardSize; y++) {
+          for (let x = 0; x < boardSize; x++) {
+            const square = document.createElement('div')
+            square.style.width = squareSize + 'px'
+            square.style.height = squareSize + 'px'
+            square.style.backgroundColor = '#fff'
+            square.style.border = '1px solid #ccc'
+
+            const isSnakeSegment = snake.some(
+              (segment) => segment.x === x && segment.y === y
+            )
+            if (isSnakeSegment) {
+              square.style.backgroundColor = '#333'
+            }
+
+            if (food.x === x && food.y === y) {
+              square.style.backgroundColor = 'red'
+            }
+
+            gameBoard.appendChild(square)
+          }
+        }
+      }
+
+      function updateSnake() {
+        const head = { ...snake[0] }
+
+        switch (direction) {
+          case 'up':
+            head.y -= 1
+            break
+          case 'down':
+            head.y += 1
+            break
+          case 'left':
+            head.x -= 1
+            break
+          case 'right':
+            head.x += 1
+            break
+        }
+
+        snake.unshift(head)
+
+        if (head.x === food.x && head.y === food.y) {
+          food = generateFood()
+        } else {
+          snake.pop()
+        }
+      }
+
+      function checkCollision() {
+        const head = snake[0]
+        if (
+          head.x < 0 ||
+          head.x >= boardSize ||
+          head.y < 0 ||
+          head.y >= boardSize
+        ) {
+          clearInterval(gameLoop)
+          alert('Game Over! Your score: ' + (snake.length - 1))
+        }
+
+        const tail = snake.slice(1)
+        if (
+          tail.some((segment) => segment.x === head.x && segment.y === head.y)
+        ) {
+          clearInterval(gameLoop)
+          alert('Game Over! Your score: ' + (snake.length - 1))
+        }
+      }
+
+      function handleKeyPress(event) {
+        const key = event.key
+        if (key === 'ArrowUp' && direction !== 'down') {
+          direction = 'up'
+        } else if (key === 'ArrowDown' && direction !== 'up') {
+          direction = 'down'
+        } else if (key === 'ArrowLeft' && direction !== 'right') {
+          direction = 'left'
+        } else if (key === 'ArrowRight' && direction !== 'left') {
+          direction = 'right'
+        }
+      }
+
+      function startGame() {
+        drawBoard()
+        gameLoop = setInterval(() => {
+          updateSnake()
+          checkCollision()
+          drawBoard()
+        }, snakeSpeed)
+
+        window.addEventListener('keydown', handleKeyPress)
+      }
+
+      startGame()
+    </script>
+  </body>
+</html>
